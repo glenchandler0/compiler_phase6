@@ -28,26 +28,231 @@ using namespace std;
 
 
 /* The registers and their related functions */
+static int offset;
 
 typedef vector<Register *>Registers;
 
 static Register *ebx = new Register("%ebx", "%bl");
 static Register *esi = new Register("%esi");
 static Register *edi = new Register("%edi");
-
 # if CALLEE_SAVED
 static Registers callee_saved = {ebx, esi, edi};
 # else
 static Registers callee_saved = {};
 # endif
 
+static Register *eax = new Register("%eax", "%al");
+static Register *edx = new Register("%edx", "%dl");
+static Register *ecx = new Register("%ecx", "%cl");
+static Registers registers = {eax, edx, ecx};
+
+static Register *xmm0 = new Register("%xmm0");
+static Register *xmm1 = new Register("%xmm1");
+static Register *xmm2 = new Register("%xmm2");
+static Register *xmm3 = new Register("%xmm3");
+static Register *xmm4 = new Register("%xmm4");
+static Register *xmm5 = new Register("%xmm5");
+static Register *xmm6 = new Register("%xmm6");
+static Register *xmm7 = new Register("%xmm7");
+static Registers fp_registers = {xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7};
+
+//======================== Control Functions ======================
+void While::generate()
+{
+    cout << "# Control function call" << endl;
+}
+
+void If::generate()
+{
+    cout << "# Control function call" << endl;
+}
+
+void Return::generate()
+{
+    cout << "# Control function call" << endl;
+}
+
+//Assignment implemented below
+
 
 //======================== Unary Functions =========================
+void Not::generate()
+{
+    cout << "# Unary function call" << endl;
+}
+
+void Negate::generate()
+{
+    cout << "# Unary function call" << endl;
+}
+
+void Dereference::generate()
+{
+    cout << "# Unary function call" << endl;
+}
+
+void Address::generate()
+{
+    cout << "# Unary function call" << endl;
+}
+
+void Cast::generate()
+{
+    cout << "# Unary function call" << endl;
+}
 
 //========================= Binary Functions =======================
+//--- Arithmetic functions -----
+void genArithmetic(Expression* result, Expression *left, Expression *right, const string& op)
+{
+    left->generate();
+    right->generate();
+
+    if(left->_register == nullptr)
+        load(left, FP(left) ? fp_getreg() : getreg());
+
+    cout << "\tadd" << suffix(left) << right << ", " << left << endl;
+
+    assign(right, nullptr);
+    assign(result, left->_register);
+}
+
+void Add::generate()
+{
+    cout << "# Add call" << endl;
+    genArithmetic(this, _left, _right, "add");
+}
+
+void Subtract::generate()
+{
+    cout << "# Binary function call" << endl;
+}
+
+void Multiply::generate()
+{
+    cout << "# Binary function call" << endl;
+}
+
+void Divide::generate()
+{
+    cout << "# Binary function call" << endl;
+}
+
+void Remainder::generate()
+{
+    cout << "# Binary function call" << endl;
+}
+
+
+//----- logical functions --------
+void LessThan::generate()
+{
+    cout << "# Binary function call" << endl;
+}
+
+void GreaterThan::generate()
+{
+    cout << "# Binary function call" << endl;
+}
+
+void LessOrEqual::generate()
+{
+    cout << "# Binary function call" << endl;
+}
+
+void GreaterOrEqual::generate()
+{
+    cout << "# Binary function call" << endl;
+}
+
+void Equal::generate()
+{
+    cout << "# Binary function call" << endl;
+}
+
+void NotEqual::generate()
+{
+    cout << "# Binary function call" << endl;
+}
+
+void LogicalAnd::generate()
+{
+    cout << "# Binary function call" << endl;
+}
+
+void LogicalOr::generate()
+{
+    cout << "# Binary function call" << endl;
+}
 
 //========================= Register Functions ======================
 
+Register *getreg()
+{
+    for (unsigned i = 0; i < registers.size(); i ++)
+        if (registers[i]->_node == nullptr)
+            return registers[i];
+
+    load(nullptr, registers[0]);
+    return registers[0];
+}
+
+Register *fp_getreg()
+{
+    for (unsigned i = 0; i < fp_registers.size(); i ++)
+        if (fp_registers[i]->_node == nullptr)
+            return fp_registers[i];
+
+    load(nullptr, fp_registers[0]);
+    return fp_registers[0];
+}
+
+void assign(Expression *expr, Register *reg)
+{
+    if (expr != nullptr) {
+        if (expr->_register != nullptr)
+            expr->_register->_node = nullptr;
+
+        expr->_register = reg;
+    }
+    if (reg != nullptr) {
+        if (reg->_node != nullptr)
+            reg->_node->_register = nullptr;
+
+        reg->_node = expr;
+    }
+}
+
+void assigntemp(Expression *expr)
+{
+    stringstream ss;
+
+    offset = offset - expr->type().size();
+    ss << offset << "(%ebp)";
+    expr->_operand = ss.str();
+}
+
+void load(Expression *expr, Register *reg)
+{
+    if (reg->_node != expr) {
+        if (reg->_node != nullptr) {
+            unsigned size = reg->_node->type().size();
+
+            assigntemp(reg->_node);
+            cout << "\tmov" << suffix(reg->_node);
+            cout << reg->name(size) << ", ";
+            cout << reg->_node->_operand << endl;
+        }
+
+        if (expr != nullptr) {
+            unsigned size = expr->type().size();
+            cout << "\tmov" << suffix(expr) << expr;
+            cout << ", " << reg->name(size) << endl;
+        }
+
+        assign(expr, reg);
+    }
+}
 
 
 //========================= PHASE 5 FUNCTIONS =======================
@@ -75,6 +280,7 @@ static int align(int offset)
  *		if not then uses its operand.
  */
 
+/*
 static ostream &operator <<(ostream &ostr, Expression *expr)
 {
     if (expr->_register != nullptr)
@@ -82,7 +288,27 @@ static ostream &operator <<(ostream &ostr, Expression *expr)
 
     return ostr << expr->_operand;
 }
+*/
 
+static ostream& operator<<(ostream &ostr, Expression *expr)
+{
+    if (expr->_register == nullptr)
+        return ostr << expr->_operand;
+
+    unsigned size = expr->type().size();
+    return ostr << expr->_register->name(size);
+}
+
+//=================TODO: Implement
+void Real::generate()
+{
+    cout << "# Real here" << endl;
+}
+
+void String::generate()
+{
+    cout << "# String here" << endl;
+}
 
 /*
  * Function:	Identifier::generate
@@ -190,6 +416,11 @@ void Assignment::generate()
 {
     _left->generate();
     _right->generate();
+
+    //TODO: CHeck this
+    if(_right->lvalue())
+        load(_right, getreg());
+
     cout << "\tmovl\t" << _right << ", " << _left << endl;
 }
 
