@@ -57,6 +57,7 @@ ostream& operator<<(ostream &ostr, Expression *expr)
 
 /* The registers and their related functions */
 int offset;
+Label *retLabel;
 
 static std::string suffix(Expression *expr) { return FP(expr) ? "sd\t" : (BYTE(expr) ? "b\t" : "l\t"); }
 
@@ -97,9 +98,22 @@ void If::generate()
     cout << "# Control function call" << endl;
 }
 
+//TODO: Check that this works
 void Return::generate()
 {
-    cout << "# Control function call" << endl;
+	//TODO: Should we be able to return literals?
+    cout << "# Return call" << endl;
+    //Call generate on Expression
+    _expr->generate();
+
+    //Save expression result in some register
+    //Maybe check if part of assignment
+    load(_expr, eax); //Shuld be getreg()?
+
+    //TODO: Jump to function epilogue so it skips rest of function
+    //TODO: Need to make it so we have function global set
+    	//How do we have any number of function labels?
+    //cout << "\tjmp\t" << *retLabel << endl; //TODO: Maybe don't need this?
 }
 
 //Assignment implemented below
@@ -179,7 +193,7 @@ void Subtract::generate()
 
 void Multiply::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# Multiply call" << endl;
     genArithmetic(this, _left, _right, FP(_left) ? "mul" : "imul");
 }
 
@@ -283,6 +297,7 @@ Register *fp_getreg()
     return fp_registers[0];
 }
 
+//Sets expression register to register and registers node to expression
 void assign(Expression *expr, Register *reg)
 {
     if (expr != nullptr) {
@@ -308,9 +323,11 @@ void assigntemp(Expression *expr)
     expr->_operand = ss.str();
 }
 
+//Generates assembly to either assign put expr into reg or reg into expr
 void load(Expression *expr, Register *reg)
 {
     if (reg->_node != expr) {
+    	//If register does belong to node gen assembly to reg into expr
         if (reg->_node != nullptr) {
             unsigned size = reg->_node->type().size();
 
@@ -320,6 +337,7 @@ void load(Expression *expr, Register *reg)
             cout << reg->_node->_operand << endl;
         }
 
+		//If expression exists, gen assembly to put expr into reg
         if (expr != nullptr) {
             unsigned size = expr->type().size();
             cout << "\tmov" << suffix(expr) << expr;
@@ -333,7 +351,19 @@ void load(Expression *expr, Register *reg)
 void release()
 {
     for (unsigned i = 0; i < registers.size(); i ++)
+    {
         assign(nullptr, registers[i]);
+    }
+    //TODO: Floating point version
+}
+
+void spill()
+{
+	for (unsigned i = 0; i < registers.size(); i ++)
+    {
+        load(nullptr, registers[i]);
+    }
+    //TODO: Floating point version
 }
 
 //========================= PHASE 5 FUNCTIONS =======================
@@ -411,6 +441,7 @@ void Integer::generate()
 
 void Call::generate()
 {
+	cout << "# Call generate called!" << endl;
     unsigned bytesPushed = 0;
 
 
@@ -446,8 +477,12 @@ void Call::generate()
 
 
     /* Call the function and then adjust the stack pointer back. */
-
+	spill();
     cout << "\tcall\t" << global_prefix << _id->name() << endl;
+    
+    //TODO: Trying to store eax which was just set to expression register
+//    load(this, eax);    
+    assign(this, eax);
 
     if (bytesPushed > 0)
 	cout << "\taddl\t$" << bytesPushed << ", %esp" << endl;
@@ -473,7 +508,12 @@ void Assignment::generate()
     // if(_right->lvalue())
     //     load(_right, getreg());
 
-    cout << "\tmovl\t" << _right << ", " << _left << endl;
+	//TODO: Seems hacky
+	//if(_right->_hasCall)
+	//	cout << "\tmovl\t" << eax << ", " << _left << endl;
+
+	//else
+	cout << "\tmovl\t" << _right << ", " << _left << endl;
 }
 
 
@@ -522,8 +562,11 @@ void Block::generate()
 
 void Function::generate()
 {
+	cout << "# Function generate called!" << endl;
     int param_offset, offset;
 
+    //TODO: Keep track of this code
+//    retLabel = new Label();
 
     /* Generate our prologue. */
 
@@ -582,4 +625,7 @@ void generateGlobals(Scope *scope)
 
     for (unsigned i = 0; i < symbols.size(); i ++)
 	if (!symbols[i]->type().isFunction()) {
-	    cout << "\t.comm\t" << global_prefix << symbols[i]->name() 
+	    cout << "\t.comm\t" << global_prefix << symbols[i]->name() << ", ";
+	    cout << symbols[i]->type().size() << endl;
+	}
+}
