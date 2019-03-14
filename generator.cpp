@@ -12,7 +12,9 @@
 # include <iostream>
 # include "generator.h"
 # include "machine.h"
-# include "Tree.h"
+// # include "Tree.h"
+# include "Register.h"
+# include "label.h"
 
 using namespace std;
 
@@ -26,9 +28,37 @@ using namespace std;
 
 # define CALLEE_SAVED 0
 
+/*
+ * Function:	operator << (private)
+ *
+ * Description:	Write an expression to the specified stream.  This function
+ *		first checks to see if the expression is in a register, and
+ *		if not then uses its operand.
+ */
+
+/*
+static ostream &operator <<(ostream &ostr, Expression *expr)
+{
+    if (expr->_register != nullptr)
+	return ostr << expr->_register;
+
+    return ostr << expr->_operand;
+}
+*/
+
+ostream& operator<<(ostream &ostr, Expression *expr)
+{
+    if (expr->_register == nullptr)
+        return ostr << expr->_operand;
+
+    unsigned size = expr->type().size();
+    return ostr << expr->_register->name(size);
+}
 
 /* The registers and their related functions */
-static int offset;
+int offset;
+
+static std::string suffix(Expression *expr) { return FP(expr) ? "sd\t" : (BYTE(expr) ? "b\t" : "l\t"); }
 
 typedef vector<Register *>Registers;
 
@@ -111,7 +141,8 @@ void genArithmetic(Expression* result, Expression *left, Expression *right, cons
     if(left->_register == nullptr)
         load(left, FP(left) ? fp_getreg() : getreg());
 
-    cout << "\tadd" << suffix(left) << right << ", " << left << endl;
+    cout << "\tadd" << suffix(left);
+    cout << right << ", " << left << endl;
 
     assign(right, nullptr);
     assign(result, left->_register);
@@ -119,7 +150,7 @@ void genArithmetic(Expression* result, Expression *left, Expression *right, cons
 
 void Add::generate()
 {
-    cout << "# Add call" << endl;
+    cout << "# Add function call" << endl;
     genArithmetic(this, _left, _right, "add");
 }
 
@@ -271,34 +302,6 @@ static int align(int offset)
     return STACK_ALIGNMENT - (abs(offset) % STACK_ALIGNMENT);
 }
 
-
-/*
- * Function:	operator << (private)
- *
- * Description:	Write an expression to the specified stream.  This function
- *		first checks to see if the expression is in a register, and
- *		if not then uses its operand.
- */
-
-/*
-static ostream &operator <<(ostream &ostr, Expression *expr)
-{
-    if (expr->_register != nullptr)
-	return ostr << expr->_register;
-
-    return ostr << expr->_operand;
-}
-*/
-
-static ostream& operator<<(ostream &ostr, Expression *expr)
-{
-    if (expr->_register == nullptr)
-        return ostr << expr->_operand;
-
-    unsigned size = expr->type().size();
-    return ostr << expr->_register->name(size);
-}
-
 //=================TODO: Implement
 void Real::generate()
 {
@@ -320,7 +323,6 @@ void String::generate()
 void Identifier::generate()
 {
     stringstream ss;
-
 
     if (_symbol->_offset != 0)
 	ss << _symbol->_offset << "(%ebp)";
@@ -418,8 +420,8 @@ void Assignment::generate()
     _right->generate();
 
     //TODO: CHeck this
-    if(_right->lvalue())
-        load(_right, getreg());
+    // if(_right->lvalue())
+    //     load(_right, getreg());
 
     cout << "\tmovl\t" << _right << ", " << _left << endl;
 }
@@ -435,7 +437,9 @@ void Assignment::generate()
 void Block::generate()
 {
     for (unsigned i = 0; i < _stmts.size(); i ++)
-	_stmts[i]->generate();
+    {
+	       _stmts[i]->generate();
+   }
 }
 
 

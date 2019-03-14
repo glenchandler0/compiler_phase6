@@ -4,9 +4,10 @@ main:
 	subl	$main.size, %esp
 	movl	$2, -4(%ebp)
 	movl	$3, -8(%ebp)
-# Add call
-	movl	0x15a2c20, %eax
-	addl	0x15a2c70, 0x15a2c20
+# Add function call
+	movl	-4(%ebp), %eax
+	addl	-8(%ebp), %eax
+	movl	%eax, x
 	movl	%ebp, %esp
 	popl	%ebp
 	ret

@@ -19,8 +19,6 @@ void generateGlobals(Scope *scope);
 # define FP(expr) ((expr)->type().isReal())
 # define BYTE(expr) ((expr)->type().size() == 1)
 
-static std::string suffix(Expression *expr) { return FP(expr) ? "sd\t" : (BYTE(expr) ? "b\t" : "l\t"); }
-
 Register *getreg();
 
 Register *fp_getreg();

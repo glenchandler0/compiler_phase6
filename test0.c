@@ -8,5 +8,5 @@ int main(void)
 	y = 2;
 	z = 3;
 
-	y + z;
+	x = y + z;
 }
