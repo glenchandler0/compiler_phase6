@@ -29,5 +29,7 @@ void assigntemp(Expression *expr);
 
 void load(Expression *expr, Register *reg);
 
+void release();
+
 
 # endif /* GENERATOR_H */

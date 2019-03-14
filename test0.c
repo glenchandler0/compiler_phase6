@@ -5,8 +5,19 @@ int main(void)
 	int y;
 	int z;
 
-	y = 17; 
-	z = 5;
+	y = 100; 
+	z = 3;
 
-	x = y % z;
+	x = y > z;
+	print_num(x);
+	x = y < x;
+	print_num(x);
+	x = y <= z;
+	print_num(x);
+	x = z == z;
+	print_num(x);
+	x = z != z;
+	print_num(x);
+	x = y >= z;
+	print_num(x);	
 }

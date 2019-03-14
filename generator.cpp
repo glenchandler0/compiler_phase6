@@ -197,37 +197,60 @@ void Remainder::generate()
 }
 
 
-//----- logical functions --------
+//----- logical control functions --------
+//TODO: More or less complete, still unsure about release() call
+void logicFunction(Expression *result, Expression *left, Expression *right, const string& op)
+{
+    left->generate();
+    right->generate();
+
+    release(); //TODO: Should we be doing this here?
+    load(left, getreg()); //movl x,%eax
+    cout << "\tcmpl\t" << right << ", " << left << endl; //cmpl y, %eax
+    cout << "\t" << op << "\t" << left->_register->byte() << endl; //setl %al. Should be char part of whatever reg?
+    cout << "\tmovzbl\t" << left->_register->byte() << ", " << left << endl;
+
+    assign(right, nullptr);
+    assign(result, left->_register);
+}
+
 void LessThan::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# LessThan call" << endl;
+    logicFunction(this, _left, _right, "setl");
 }
 
 void GreaterThan::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# GreaterThan call" << endl;
+    logicFunction(this, _left, _right, "setg");
 }
 
 void LessOrEqual::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# LessOrEqual call" << endl;
+    logicFunction(this, _left, _right, "setle");
 }
 
 void GreaterOrEqual::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# GreaterOrEqual call" << endl;
+    logicFunction(this, _left, _right, "setge");
 }
 
 void Equal::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# Equal call" << endl;
+    logicFunction(this, _left, _right, "sete");
 }
 
 void NotEqual::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# Not equal call" << endl;
+    logicFunction(this, _left, _right, "setne");
 }
 
+//----- Actual logic functions ------
 void LogicalAnd::generate()
 {
     cout << "# Binary function call" << endl;
@@ -307,6 +330,11 @@ void load(Expression *expr, Register *reg)
     }
 }
 
+void release()
+{
+    for (unsigned i = 0; i < registers.size(); i ++)
+        assign(nullptr, registers[i]);
+}
 
 //========================= PHASE 5 FUNCTIONS =======================
 /*
@@ -554,7 +582,4 @@ void generateGlobals(Scope *scope)
 
     for (unsigned i = 0; i < symbols.size(); i ++)
 	if (!symbols[i]->type().isFunction()) {
-	    cout << "\t.comm\t" << global_prefix << symbols[i]->name() << ", ";
-	    cout << symbols[i]->type().size() << endl;
-	}
-}
+	    cout << "\t.comm\t" << global_prefix << symbols[i]->name() 
