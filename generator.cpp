@@ -141,37 +141,59 @@ void genArithmetic(Expression* result, Expression *left, Expression *right, cons
     if(left->_register == nullptr)
         load(left, FP(left) ? fp_getreg() : getreg());
 
-    cout << "\tadd" << suffix(left);
+    cout << "\t" << op << suffix(left);
     cout << right << ", " << left << endl;
 
     assign(right, nullptr);
     assign(result, left->_register);
 }
 
+void int_divide(Expression* result, Expression *left, Expression *right, Register *reg)
+{
+    left->generate();
+    right->generate();
+
+    //Performs move for us
+    load(left, eax);
+    cout << "\tcltd" << endl;
+    load(right, ecx);
+    cout << "\tidivl\t" << right << endl;
+
+    assign(nullptr, eax);
+    assign(nullptr, edx);
+    assign(nullptr, ecx);
+    assign(result, reg);
+}
+
 void Add::generate()
 {
-    cout << "# Add function call" << endl;
+    cout << "# Add call" << endl;
     genArithmetic(this, _left, _right, "add");
 }
 
 void Subtract::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# Subtract call" << endl;
+    genArithmetic(this, _left, _right, "sub");
 }
 
 void Multiply::generate()
 {
     cout << "# Binary function call" << endl;
+    genArithmetic(this, _left, _right, FP(_left) ? "mul" : "imul");
 }
 
 void Divide::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# Divide call" << endl;
+    if(FP(_left)) genArithmetic(this, _left, _right, "div");
+    else int_divide(this, _left, _right, eax);
 }
 
 void Remainder::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# Remainder call" << endl;
+    int_divide(this, _left, _right, edx);
 }
 
 

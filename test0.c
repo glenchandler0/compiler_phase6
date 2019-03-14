@@ -5,8 +5,8 @@ int main(void)
 	int y;
 	int z;
 
-	y = 2;
-	z = 3;
+	y = 17; 
+	z = 5;
 
-	x = y + z;
+	x = y % z;
 }
