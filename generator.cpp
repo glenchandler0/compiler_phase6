@@ -195,14 +195,45 @@ void Negate::generate()
     assign(this, _expr->_register);
 }
 
+//TODO: Need to find a way to test dereference
+//TODO: More needs to be done here
 void Dereference::generate()
 {
-    cout << "# Unary function call" << endl;
+    cout << "# Dereference call" << endl;
+
+    _expr->generate();
+
+    load(_expr, getreg());
+    cout << "\tmov" << suffix(_expr) << "(" << _expr << "), " << _expr << endl;
+
+    assign(this, _expr->_register);
 }
 
 void Address::generate()
 {
-    cout << "# Unary function call" << endl;
+    cout << "# Address call" << endl;
+
+    _expr->generate();
+
+    //Nothing is happening in this case
+    if(_expr->isDereference() != nullptr)
+    {
+        cout << "# Detected expr is dereference" << endl;
+        _operand = _expr->_operand;
+    }
+    else
+    {
+        //put address of _expr into register
+        // assigntemp(_expr);
+        load(_expr, getreg());
+
+        //move register back into expression (this?) (operand?) (_expr?)
+        cout << "\tleal\t" << _expr << ", " << _expr->_register << endl;
+        load(_expr, _expr->_register); //movl   eax, expr
+    }
+
+    //TODO: Should this go here?
+    assign(this, _expr->_register);
 }
 
 void Cast::generate()

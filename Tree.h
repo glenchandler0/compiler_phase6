@@ -79,6 +79,7 @@ public:
     bool lvalue() const;
     void test(const Label &label, bool ifTrue);
     virtual void generate() {}
+    virtual Expression * isDereference() { return nullptr; }
 };
 
 
@@ -101,6 +102,7 @@ protected:
     Unary(Expression *expr, const Type &type);
 public:
     virtual void generate() {}
+    //virtual Expression * isDereference {}
 };
 
 
@@ -198,6 +200,7 @@ public:
     Dereference(Expression *expr, const Type &type);
     virtual void write(ostream &ostr) const;
     virtual void generate();
+    virtual Expression * isDereference() { return _expr; };
 };
 
 
@@ -403,7 +406,7 @@ public:
     virtual void generate();
 };
 
-    
+
 /* An if-then or if-then-else statement: if ( expr ) thenStmt else elseStmt */
 
 class If : public Statement {
