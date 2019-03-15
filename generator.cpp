@@ -332,12 +332,69 @@ void NotEqual::generate()
 //----- Actual logic functions ------
 void LogicalAnd::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# AND call" << endl;
+
+    //release(); //TODO: Should I call this?
+    Label eitherFalse, exit;
+
+    _left->generate();
+    _right->generate();
+
+    //Is left != 0 jump to True
+    load(_left, eax);
+    cout << "\tcmp" << suffix(_left) << "$1, " << _left << endl;
+    cout << "\tjne\t" << eitherFalse << endl;
+
+    //Is right != jump to true
+    load(_right, eax);
+    cout << "\tcmp" << suffix(_right) << "$1, " << _right << endl;
+    cout << "\tjne\t" << eitherFalse << endl;
+
+    //If code still gets here, set to false
+    cout << "\tmovl\t$1, " << eax << endl;
+    cout << "\tjmp\t" << exit << endl;
+
+    cout << eitherFalse << ":" << endl;
+    cout << "\tmovl\t$0, " << eax << endl;
+
+    cout << exit << ":" << endl;
+
+    assign(nullptr, _right->_register);
+    assign(this, eax);
 }
 
+//TODO: Test since this uses multiple in a row
 void LogicalOr::generate()
 {
-    cout << "# Binary function call" << endl;
+    cout << "# OR call" << endl;
+
+    //release(); //TODO: Should I call this?
+    Label eitherTrue, exit;
+
+    _left->generate();
+    _right->generate();
+
+    //Is left != 0 jump to True
+    load(_left, eax);
+    cout << "\tcmp" << suffix(_left) << "$0, " << _left << endl;
+    cout << "\tjne\t" << eitherTrue << endl;
+
+    //Is right != jump to true
+    load(_right, eax);
+    cout << "\tcmp" << suffix(_right) << "$0, " << _right << endl;
+    cout << "\tjne\t" << eitherTrue << endl;
+
+    //If code still gets here, set to false
+    cout << "\tmovl\t$0, " << eax << endl;
+    cout << "\tjmp\t" << exit << endl;
+
+    cout << eitherTrue << ":" << endl;
+    cout << "\tmovl\t$1, " << eax << endl;
+
+    cout << exit << ":" << endl;
+
+    assign(nullptr, _right->_register);
+    assign(this, eax);
 }
 
 //========================= Register Functions ======================
