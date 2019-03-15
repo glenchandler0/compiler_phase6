@@ -11,4 +11,6 @@ int main(void)
 {
 	foo();
 	print_num(x);
+	return x;
+	x + x;
 }

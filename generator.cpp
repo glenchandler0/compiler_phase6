@@ -88,14 +88,62 @@ static Register *xmm7 = new Register("%xmm7");
 static Registers fp_registers = {xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7};
 
 //======================== Control Functions ======================
-void While::generate()
+//Function for testing booleans, used in other control functions
+void Expression::test(const Label &label, bool ifTrue)
 {
-    cout << "# Control function call" << endl;
+    generate();
+
+    if (_register == nullptr)
+        load(this, getreg());
+
+    cout << "\tcmpl\t$0, " << this << endl;
+    cout << (ifTrue ? "\tjne\t" : "\tje\t") << label << endl;
+
+    assign(this, nullptr);
 }
 
+
+void While::generate()
+{
+    cout << "# While call" << endl;
+
+    Label loop, exit;
+    cout << loop << ":" << endl;
+    _expr->test(exit, false); //TODO: Test this
+    _stmt->generate();
+    release();
+
+    cout << "\tjmp\t" << loop << endl;
+    cout << exit << ":" << endl;
+}
+
+//First sets up expression check to either jump to else, or exit when if fails
+//Then checks else isn't null to output contents and label
+//Finally places exit label
 void If::generate()
 {
-    cout << "# Control function call" << endl;
+    cout << "# If call" << endl;
+
+    Label ifLabel, elseLabel, exitLabel;
+
+    //Code to test if label
+    if(_elseStmt != NULL)
+        _expr->test(elseLabel, false);
+    else
+        _expr->test(exitLabel, false);
+
+    //Then label, then jump to exit
+    _thenStmt->generate();
+    cout << "\tjmp\t" << exitLabel << endl;
+
+    if(_elseStmt != NULL)
+    {
+        //Else label
+        cout << elseLabel << ":" << endl;
+        //Else statement
+        _elseStmt->generate();
+    }
+    cout << exitLabel << ":" << endl;
 }
 
 //TODO: Check that this works
@@ -479,7 +527,7 @@ void Call::generate()
 
 
     /* Call the function and then adjust the stack pointer back. */
-	spill();
+	release();
     cout << "\tcall\t" << global_prefix << _id->name() << endl;
 
     //TODO: Trying to store eax which was just set to expression register
@@ -515,7 +563,7 @@ void Assignment::generate()
 	//	cout << "\tmovl\t" << eax << ", " << _left << endl;
 
 	//else
-	cout << "\tmovl\t" << _right << ", " << _left << endl;
+	cout << "\tmov"<< suffix(_left) << _right << ", " << _left << endl;
 }
 
 

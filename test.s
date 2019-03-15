@@ -1,35 +1,30 @@
 # Function generate called!
-foo:
-	pushl	%ebp
-	movl	%esp, %ebp
-	subl	$foo.size, %esp
-	movl	$2, x
-# Return call
-	movl	x, %eax
-	jmp	.L0
-	movl	$3, x
-.L0:
-	movl	%ebp, %esp
-	popl	%ebp
-	ret
-
-	.set	foo.size, 0
-	.globl	foo
-
-# Function generate called!
 main:
 	pushl	%ebp
 	movl	%esp, %ebp
 	subl	$main.size, %esp
-# Call generate called!
-	movl	%eax, -4(%ebp)
-	call	foo
+	movl	$100, x
+# If call
+# LessThan call
+	movl	x, %eax
+	cmpl	$20, %eax
+	setl	%al
+	movzbl	%al, %eax
+	cmpl	$0, %eax
+	je	.L2
 # Call generate called!
 	pushl	x
-	movl	%eax, -8(%ebp)
 	call	print_num
 	addl	$4, %esp
-.L1:
+	jmp	.L3
+.L2:
+	movl	$200, x
+# Call generate called!
+	pushl	x
+	call	print_num
+	addl	$4, %esp
+.L3:
+.L0:
 	movl	%ebp, %esp
 	popl	%ebp
 	ret
