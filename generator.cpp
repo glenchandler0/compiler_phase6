@@ -18,6 +18,8 @@
 
 using namespace std;
 
+//FP
+//Comparison, different assembly instructions
 
 /* This needs to be set to zero if temporaries are placed on the stack. */
 
@@ -657,19 +659,26 @@ void Call::generate()
 
 void Assignment::generate()
 {
-    _left->generate();
     _right->generate();
 
-    //TODO: CHeck this
-    // if(_right->lvalue())
-    //     load(_right, getreg());
 
-	//TODO: Seems hacky
-	//if(_right->_hasCall)
-	//	cout << "\tmovl\t" << eax << ", " << _left << endl;
-
-	//else
-	cout << "\tmov"<< suffix(_left) << _right << ", " << _left << endl;
+	if(_left->isDereference() != nullptr)
+	{
+		cout << "#Left is dereference" << endl;
+		
+		Expression * addr = _left->isDereference();
+		addr->generate();
+		
+		if(addr->_register == nullptr)
+        	load(addr, FP(_left) ? fp_getreg() : getreg());
+        	
+        cout << "\tmov"<< suffix(_left) << _right << ", (" << addr << ")" << endl;
+	}
+	else
+	{
+		_left->generate();
+		cout << "\tmov"<< suffix(_left) << _right << ", " << _left << endl;
+	}
 }
 
 

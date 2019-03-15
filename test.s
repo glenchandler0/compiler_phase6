@@ -5,26 +5,13 @@ main:
 	subl	$main.size, %esp
 	movl	$3, z
 # Address call
-	leal	a, %eax
-	movl	%eax, y
-# Address call
-	leal	y, %edx
-	movl	%edx, x
-# Dereference call
-	movl	x, %ecx
-	movl	(%ecx), %ecx
-# Address call
-	movl	%eax, -4(%ebp)
 	leal	z, %eax
-	movl	%eax, %ecx
+	movl	%eax, y
+#Left is dereference
+	movl	y, %edx
+	movl	$4, (%edx)
 # Call generate called!
-# Dereference call
-# Dereference call
-	movl	%eax, -8(%ebp)
-	movl	x, %eax
-	movl	(%eax), %eax
-	movl	(%eax), %eax
-	pushl	%eax
+	pushl	z
 	call	print_num
 	addl	$4, %esp
 .L0:

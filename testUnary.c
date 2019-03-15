@@ -7,10 +7,8 @@ int main(void)
 {
 	z = 3;
 
-	y = &a;	
-	x = &y;
+	y = &z;
+	*y = 4;
 
-	*x = &z;
-
-	print_num(**x);
+	print_num(z);
 }
