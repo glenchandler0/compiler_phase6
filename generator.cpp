@@ -196,44 +196,45 @@ void Negate::generate()
 }
 
 //TODO: Need to find a way to test dereference
-//TODO: More needs to be done here
+
 void Dereference::generate()
 {
     cout << "# Dereference call" << endl;
 
     _expr->generate();
-
-    load(_expr, getreg());
-    cout << "\tmov" << suffix(_expr) << "(" << _expr << "), " << _expr << endl;
-
-    assign(this, _expr->_register);
+	
+	if(_expr->_register == nullptr)
+	    load(_expr, getreg());	
+	    
+    cout << "\tmov" << suffix(_expr) << "(" << _expr << "), ";
+    assign(_expr, nullptr); //Lets go of register to use
+    
+    assign(this, FP(this) ? fp_getreg(): getreg());
+    cout << this << endl;
 }
 
 void Address::generate()
 {
     cout << "# Address call" << endl;
 
-    _expr->generate();
-
-    //Nothing is happening in this case
-    if(_expr->isDereference() != nullptr)
+	//Not a dereference
+    if(_expr->isDereference() == nullptr)
     {
-        cout << "# Detected expr is dereference" << endl;
+		_expr->generate();
+		assign(this, getreg()); //Needs to be 32 since it will be address
+		cout << "\tlea" << suffix(_expr) << _expr << ", " << this << endl;
+    }
+    else //If expression is a dereference
+    {
+    	Expression *child = _expr->isDereference();
+        child->generate();
+        
+        //Load variable being dereferenced into this
+        load(child, getreg());
+        
+        assign(this, child->_register);
         _operand = _expr->_operand;
     }
-    else
-    {
-        //put address of _expr into register
-        // assigntemp(_expr);
-        load(_expr, getreg());
-
-        //move register back into expression (this?) (operand?) (_expr?)
-        cout << "\tleal\t" << _expr << ", " << _expr->_register << endl;
-        load(_expr, _expr->_register); //movl   eax, expr
-    }
-
-    //TODO: Should this go here?
-    assign(this, _expr->_register);
 }
 
 void Cast::generate()
