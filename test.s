@@ -3,27 +3,25 @@ main:
 	pushl	%ebp
 	movl	%esp, %ebp
 	subl	$main.size, %esp
-	movl	$100, x
-# If call
-# LessThan call
+	movl	$10, x
+# Unary function call
 	movl	x, %eax
-	cmpl	$20, %eax
-	setl	%al
-	movzbl	%al, %eax
-	cmpl	$0, %eax
-	je	.L2
+	negl	%eax
+	movl	%eax, y
 # Call generate called!
-	pushl	x
+	pushl	y
 	call	print_num
 	addl	$4, %esp
-	jmp	.L3
-.L2:
-	movl	$200, x
+# Not call
+	movl	y, %edx
+	cmpl	$0, %edx
+	sete	%dl
+	movzbl	%dl, %edx
+	movl	%edx, y
 # Call generate called!
-	pushl	x
+	pushl	y
 	call	print_num
 	addl	$4, %esp
-.L3:
 .L0:
 	movl	%ebp, %esp
 	popl	%ebp
@@ -33,3 +31,4 @@ main:
 	.globl	main
 
 	.comm	x, 4
+	.comm	y, 4

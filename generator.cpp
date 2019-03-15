@@ -168,14 +168,31 @@ void Return::generate()
 
 
 //======================== Unary Functions =========================
+//TODO: For unary, do I need to be releasing getreg()?
 void Not::generate()
 {
-    cout << "# Unary function call" << endl;
+    cout << "# Not call" << endl;
+
+    _expr->generate();
+
+    load(_expr, getreg());
+    cout << "\tcmp"<< suffix(_expr) << "$0, " << _expr << endl;
+    cout << "\tsete\t" << _expr->_register->byte() << endl;
+    cout << "\tmovzbl\t" << _expr->_register->byte() << ", " << _expr << endl;
+
+    assign(this, _expr->_register); //Check
 }
 
 void Negate::generate()
 {
     cout << "# Unary function call" << endl;
+
+    _expr->generate();
+
+    load(_expr, getreg());
+    cout << "\tneg" << suffix(_expr) << _expr << endl;
+
+    assign(this, _expr->_register);
 }
 
 void Dereference::generate()
@@ -219,7 +236,7 @@ void int_divide(Expression* result, Expression *left, Expression *right, Registe
     load(left, eax);
     cout << "\tcltd" << endl;
     load(right, ecx);
-    cout << "\tidivl\t" << right << endl;
+    cout << "\tidivl\t" << right << endl; //edx:eax = edx:eax / ecx
 
     assign(nullptr, eax);
     assign(nullptr, edx);
