@@ -113,7 +113,7 @@ void Return::generate()
     //TODO: Jump to function epilogue so it skips rest of function
     //TODO: Need to make it so we have function global set
     	//How do we have any number of function labels?
-    //cout << "\tjmp\t" << *retLabel << endl; //TODO: Maybe don't need this?
+    cout << "\tjmp\t" << *retLabel << endl; //TODO: Maybe don't need this?
 }
 
 //Assignment implemented below
@@ -442,6 +442,8 @@ void Integer::generate()
 void Call::generate()
 {
 	cout << "# Call generate called!" << endl;
+//	*retLabel = "." + _id->name() + ".exit:";
+
     unsigned bytesPushed = 0;
 
 
@@ -479,9 +481,9 @@ void Call::generate()
     /* Call the function and then adjust the stack pointer back. */
 	spill();
     cout << "\tcall\t" << global_prefix << _id->name() << endl;
-    
+
     //TODO: Trying to store eax which was just set to expression register
-//    load(this, eax);    
+//    load(this, eax);
     assign(this, eax);
 
     if (bytesPushed > 0)
@@ -565,8 +567,9 @@ void Function::generate()
 	cout << "# Function generate called!" << endl;
     int param_offset, offset;
 
-    //TODO: Keep track of this code
-//    retLabel = new Label();
+    retLabel = new Label();
+    // cout << retLabel << endl;
+
 
     /* Generate our prologue. */
 
@@ -593,6 +596,9 @@ void Function::generate()
 
     _body->generate();
 
+
+    //TODO: Output first epilogue label
+    cout << *retLabel << ":" << endl;
 
     /* Generate our epilogue. */
 
