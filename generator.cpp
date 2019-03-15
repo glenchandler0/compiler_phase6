@@ -241,7 +241,52 @@ void Address::generate()
 
 void Cast::generate()
 {
-    cout << "# Unary function call" << endl;
+    cout << "# Cast call" << endl;
+    
+    _expr->generate();
+    
+    if(_expr->_register == nullptr)
+    	load(_expr, FP(_expr) ? fp_getreg(): getreg());
+    	
+    const Type &src = _expr->type(), &dest = _type;
+    
+    if(src.size() == 1) //Src is char
+    {
+    	if(dest.size() == 1) {
+    		//movsbl
+    		assign(this, _expr->_register);
+    	} else if(dest.size() == 4) {
+    		assign(this, _expr->_register);
+    	} else {
+    		assign(this, fp_getreg());
+    		cout << "\tcvtsi2sd\t" << _expr << ", " << this << endl;
+    		assign(_expr, nullptr);
+    	}
+    }
+    else if(src.size() == 4) //Src is int
+    {
+    	if(dest.size() == 1) {
+    		assign(this, _expr->_register);
+    	} else if(dest.size() == 4) {
+    		assign(this, _expr->_register);
+    	} else {
+    		assign(this, fp_getreg());
+    		cout << "\tcvtsi2sd\t" << _expr << ", " << this << endl;
+    		assign(_expr, nullptr);
+    	}
+    }
+    else if(src.size() == 8) //Src is fp
+    {
+    	if(dest.size() == 1) {
+    	} else if(dest.size() == 4) {
+    		assign(this, getreg());
+    		cout << "\tcvttsd2si\t" << _expr << ", " << this << endl;
+    		assign(_expr, nullptr);
+    	}
+    	else {
+    	}
+    	
+    }
 }
 
 //========================= Binary Functions =======================

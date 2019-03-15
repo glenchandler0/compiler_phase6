@@ -1,14 +1,13 @@
 int **x;
 int *y;
 int z;
-int a;
+double a;
 
 int main(void)
 {
-	z = 3;
+	z = 2;
 
-	y = &z;
-	*y = 4;
+	z = (int) a;
 
 	print_num(z);
 }
