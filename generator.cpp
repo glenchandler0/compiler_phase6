@@ -249,7 +249,7 @@ void Cast::generate()
 {
     cout << "# Cast call" << endl;
     //Should release be here?
-    release();
+    //release();
 
     _expr->generate();
 
@@ -383,7 +383,7 @@ void logicFunction(Expression *result, Expression *left, Expression *right, cons
     left->generate();
     right->generate();
 
-    release(); //TODO: Should we be doing this here?
+    //release(); //TODO: Should we be doing this here?
     load(left, getreg()); //movl x,%eax
     cout << "\tcmpl\t" << right << ", " << left << endl; //cmpl y, %eax
     cout << "\t" << op << "\t" << left->_register->byte() << endl; //setl %al. Should be char part of whatever reg?
@@ -577,6 +577,10 @@ void release()
         assign(nullptr, registers[i]);
     }
     //TODO: Floating point version
+    for (unsigned i = 0; i < fp_registers.size(); i++)
+    {
+        assign(nullptr, fp_registers[i]);
+    }
 }
 
 void spill()
@@ -607,22 +611,31 @@ static int align(int offset)
 //=================TODO: Implement
 void Real::generate()
 {
+    //TODO: Not sure about dynamic label variable
     cout << "# Real here" << endl;
     stringstream ss;
-    Label *realLabel = new Label();
+    Label realLabel;// = new Label();
 
     //Set operand to just label name
-    ss << *realLabel;
+    ss << realLabel;
     _operand = ss.str();
 
     //Finish full label for data section and push to list
-    ss << ":\t.double\t" << _value;
+    ss << ":\t.double " << _value;
     realLabels.push_back(ss.str());
 }
 
 void String::generate()
 {
     cout << "# String here" << endl;
+    stringstream ss;
+    Label stringLabel;
+
+    ss << stringLabel;
+    _operand = ss.str();
+
+    ss << ":\t.asciz " << _value;
+    stringLabels.push_back(ss.str());
 }
 
 /*
@@ -738,8 +751,8 @@ void Assignment::generate()
     _right->generate();
 
     //Check for floating point stuff
-    //if(_right->)
-
+    if(_right->_register == nullptr)
+        load(_right, FP(_right) ? fp_getreg() : getreg());
 
 	if(_left->isDereference() != nullptr)
 	{
@@ -756,9 +769,6 @@ void Assignment::generate()
 	else
 	{
 		_left->generate();
-        //check if need to convert to double
-        if(_right->_register == nullptr)
-            load(_right, fp_getreg());
 
 		cout << "\tmov"<< suffix(_left) << _right << ", " << _left << endl;
 	}
@@ -776,6 +786,9 @@ void Block::generate()
 {
     for (unsigned i = 0; i < _stmts.size(); i ++)
     {
+            //TODO: Delete? should you clear registers here?
+            release();
+
 	       _stmts[i]->generate();
    }
 }
@@ -886,5 +899,9 @@ void generateGlobals(Scope *scope)
     for(unsigned i = 0; i < realLabels.size(); i++)
     {
         cout << realLabels[i] << endl;
+    }
+    for(unsigned i = 0; i < stringLabels.size(); i++)
+    {
+        cout << stringLabels[i] << endl;
     }
 }
