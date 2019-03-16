@@ -8,7 +8,7 @@ void print_num(int n)
 
 void print_double(double n)
 {
-	printf("%.2f\n", n);
+	printf("%f\n", n);
 }
 
 int *give_memory(int size)

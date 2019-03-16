@@ -261,15 +261,15 @@ void Cast::generate()
     	if(dest.size() == 1) {
     		assign(this, _expr->_register);
     	} else if(dest.size() == 4) {
-            //assign(this, getreg());
             cout << "\tmovsbl\t" << _expr << ", " << _expr->_register->name() << endl;
     		assign(this, _expr->_register);
     	} else {
             //sign extend into 32 bit
+            cout << "\tmovsbl\t" << _expr << ", " << _expr->_register->name() << endl;
 
             //cvt 32 bit to 64 bit
     		assign(this, fp_getreg());
-    		cout << "\tcvtsi2sd\t" << _expr << ", " << this << endl;
+    		cout << "\tcvtsi2sd\t" << _expr->_register->name() << ", " << this << endl;
     		assign(_expr, nullptr);
     	}
     }
@@ -727,6 +727,9 @@ void Assignment::generate()
 {
     _right->generate();
 
+    //Check for floating point stuff
+    //if(_right->)
+
 
 	if(_left->isDereference() != nullptr)
 	{
@@ -743,6 +746,10 @@ void Assignment::generate()
 	else
 	{
 		_left->generate();
+        //check if need to convert to double
+        if(_right->_register == nullptr)
+            load(_right, fp_getreg());
+
 		cout << "\tmov"<< suffix(_left) << _right << ", " << _left << endl;
 	}
 }

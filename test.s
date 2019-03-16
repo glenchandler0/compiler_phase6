@@ -3,10 +3,8 @@ main:
 	pushl	%ebp
 	movl	%esp, %ebp
 	subl	$main.size, %esp
-	movl	$1000, x
-# Cast call
-	movl	x, %eax
-	cvtsi2sd	%eax, %xmm0
+# Real here
+	movsd	.L1, %xmm0
 	movsd	%xmm0, y
 # Cast call
 	movsd	y, %xmm1
@@ -32,3 +30,4 @@ main:
 	.comm	y, 8
 	.comm	z, 1
 	.data
+.L1:	.double	2.1

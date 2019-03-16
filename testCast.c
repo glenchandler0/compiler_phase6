@@ -4,9 +4,9 @@ char z;
 
 int main(void)
 {
-	x = 1000;
-	y = (double)x;
+	y = 2.1;
 	x = (int)y;
 
+	print_double(y);
 	print_num(x);
 }
