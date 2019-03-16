@@ -6,18 +6,14 @@ int foo2(void)
 	return 2;
 }
 
-int foo(void)
+int foo(int y)
 {
-	int y;	
-	y = 4;	
 	return y * y;
 }
 
 int main(void)
 {
 	x = 3;
-	x = foo(); 
+	x = foo(foo(x)); 
 	print_num(x);
-	y = foo() + foo() + foo() + foo();
-	print_num(y);
 }

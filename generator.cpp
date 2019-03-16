@@ -131,6 +131,7 @@ void While::generate()
 void If::generate()
 {
     cout << "# If call" << endl;
+    release();// TODO: Check release
 
     Label ifLabel, elseLabel, exitLabel;
 
@@ -164,11 +165,14 @@ void Return::generate()
 
     //Save expression result in some register
     //Maybe check if part of assignment
-    load(_expr, eax); //Shuld be getreg()?
+    //if expr size == 4
+    //load(_expr, eax); //Shuld be getreg()?
+    load(_expr, eax);
 
-    //TODO: Jump to function epilogue so it skips rest of function
-    //TODO: Need to make it so we have function global set
-    	//How do we have any number of function labels?
+    //if expr size == 8
+    //assigntemp(this)
+    //fldl this
+
     cout << "\tjmp\t" << *retLabel << endl; //TODO: Maybe don't need this?
 }
 
@@ -729,7 +733,13 @@ void Call::generate()
 
     //TODO: Trying to store eax which was just set to expression register
 //    load(this, eax);
+    //if int
     assign(this, eax);
+
+
+    //if float
+    //fstpl
+
 
     if (bytesPushed > 0)
 	cout << "\taddl\t$" << bytesPushed << ", %esp" << endl;

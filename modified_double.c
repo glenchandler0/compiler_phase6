@@ -1,9 +1,9 @@
 /* math.c */
-int num;
+double num;
 
-int testfun(int input)
+double testfun(double input)
 {
-	return input;
+	return input + input;
 }
 
 int main(void)
@@ -22,14 +22,6 @@ int main(void)
     e = x / y - z;
 
 num = a;
-print_num(num);
-num = b;
-print_num(num);
-num = c;
-print_num(num);
-num = d;
-print_num(num);
-num = e;
-print_num(num);
+num = testfun(num);
 }
 
