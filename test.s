@@ -7,13 +7,30 @@ main:
 	movsd	.L1, %xmm0
 	movsd	%xmm0, y
 # Cast call
+# Cast call
 	movsd	y, %xmm1
 	cvttsd2si	%xmm1, %eax
+	movb	%al, z
+# Cast call
+	movb	z, %al
+	movsbl	%al, %eax
+	cvtsi2sd	%eax, %xmm1
+	movsd	%xmm1, y
+# Cast call
+	movsd	y, %xmm2
+	cvttsd2si	%xmm2, %eax
 	movl	%eax, x
-# Call generate called!
-	pushl	y
-	call	print_double
-	addl	$8, %esp
+# Cast call
+	movl	x, %eax
+	movb	%al, z
+# Cast call
+	movl	x, %eax
+	cvtsi2sd	%eax, %xmm2
+	movsd	%xmm2, y
+# Cast call
+	movsd	y, %xmm3
+	cvttsd2si	%xmm3, %eax
+	movl	%eax, x
 # Call generate called!
 	pushl	x
 	call	print_num
@@ -30,4 +47,4 @@ main:
 	.comm	y, 8
 	.comm	z, 1
 	.data
-.L1:	.double	2.1
+.L1:	.double	3.85391

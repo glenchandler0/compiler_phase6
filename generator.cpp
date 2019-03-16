@@ -248,6 +248,8 @@ void Address::generate()
 void Cast::generate()
 {
     cout << "# Cast call" << endl;
+    //Should release be here?
+    release();
 
     _expr->generate();
 
@@ -288,6 +290,13 @@ void Cast::generate()
     else if(src.size() == 8) //Src is fp
     {
     	if(dest.size() == 1) {
+            //TODO:
+            //Convert to int
+            assign(this, getreg());
+            cout << "\tcvttsd2si\t" << _expr << ", " << this->_register->name() << endl;
+
+            //movsbl %al, %eax
+            //cout << "\tmovsbl\t" << this << ", " << this->_register->name() << endl;
     	} else if(dest.size() == 4) {
     		assign(this, getreg());
     		cout << "\tcvttsd2si\t" << _expr << ", " << this << endl;
@@ -295,6 +304,7 @@ void Cast::generate()
     	}
     	else {
             //Do nothing?
+            assign(this, _expr->_register);
     	}
 
     }
