@@ -61,6 +61,12 @@ ostream& operator<<(ostream &ostr, Expression *expr)
 int offset;
 Label *retLabel;
 
+//.data section
+typedef std::vector<string> Strings;
+Strings stringLabels;
+typedef std::vector<string> Reals;
+Reals realLabels;
+
 static std::string suffix(Expression *expr) { return FP(expr) ? "sd\t" : (BYTE(expr) ? "b\t" : "l\t"); }
 
 typedef vector<Register *>Registers;
@@ -204,13 +210,13 @@ void Dereference::generate()
     cout << "# Dereference call" << endl;
 
     _expr->generate();
-	
+
 	if(_expr->_register == nullptr)
-	    load(_expr, getreg());	
-	    
+	    load(_expr, getreg());
+
     cout << "\tmov" << suffix(_expr) << "(" << _expr << "), ";
     assign(_expr, nullptr); //Lets go of register to use
-    
+
     assign(this, FP(this) ? fp_getreg(): getreg());
     cout << this << endl;
 }
@@ -230,10 +236,10 @@ void Address::generate()
     {
     	Expression *child = _expr->isDereference();
         child->generate();
-        
+
         //Load variable being dereferenced into this
         load(child, getreg());
-        
+
         assign(this, child->_register);
         _operand = _expr->_operand;
     }
@@ -242,22 +248,26 @@ void Address::generate()
 void Cast::generate()
 {
     cout << "# Cast call" << endl;
-    
+
     _expr->generate();
-    
+
     if(_expr->_register == nullptr)
     	load(_expr, FP(_expr) ? fp_getreg(): getreg());
-    	
+
     const Type &src = _expr->type(), &dest = _type;
-    
+
     if(src.size() == 1) //Src is char
     {
     	if(dest.size() == 1) {
-    		//movsbl
     		assign(this, _expr->_register);
     	} else if(dest.size() == 4) {
+            //assign(this, getreg());
+            cout << "\tmovsbl\t" << _expr << ", " << _expr->_register->name() << endl;
     		assign(this, _expr->_register);
     	} else {
+            //sign extend into 32 bit
+
+            //cvt 32 bit to 64 bit
     		assign(this, fp_getreg());
     		cout << "\tcvtsi2sd\t" << _expr << ", " << this << endl;
     		assign(_expr, nullptr);
@@ -284,8 +294,9 @@ void Cast::generate()
     		assign(_expr, nullptr);
     	}
     	else {
+            //Do nothing?
     	}
-    	
+
     }
 }
 
@@ -587,6 +598,16 @@ static int align(int offset)
 void Real::generate()
 {
     cout << "# Real here" << endl;
+    stringstream ss;
+    Label *realLabel = new Label();
+
+    //Set operand to just label name
+    ss << *realLabel;
+    _operand = ss.str();
+
+    //Finish full label for data section and push to list
+    ss << ":\t.double\t" << _value;
+    realLabels.push_back(ss.str());
 }
 
 void String::generate()
@@ -710,13 +731,13 @@ void Assignment::generate()
 	if(_left->isDereference() != nullptr)
 	{
 		cout << "#Left is dereference" << endl;
-		
+
 		Expression * addr = _left->isDereference();
 		addr->generate();
-		
+
 		if(addr->_register == nullptr)
         	load(addr, FP(_left) ? fp_getreg() : getreg());
-        	
+
         cout << "\tmov"<< suffix(_left) << _right << ", (" << addr << ")" << endl;
 	}
 	else
@@ -842,4 +863,11 @@ void generateGlobals(Scope *scope)
 	    cout << "\t.comm\t" << global_prefix << symbols[i]->name() << ", ";
 	    cout << symbols[i]->type().size() << endl;
 	}
+
+    //TODO: Possibly take this out, adding data section
+    cout << "\t.data" << endl;
+    for(unsigned i = 0; i < realLabels.size(); i++)
+    {
+        cout << realLabels[i] << endl;
+    }
 }
